@@ -1,0 +1,36 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      routes:
+        - id: woj-backend-user-service
+          uri: lb://woj-backend-user-service
+          predicates:
+            - Path=/api/user/**
+        - id: woj-backend-question-service
+          uri: lb://woj-backend-question-service
+          predicates:
+            - Path=/api/question/**
+        - id: woj-backend-judge-service
+          uri: lb://woj-backend-judge-service
+          predicates:
+            - Path=/api/judge/**
+  application:
+    name: woj-backend-gateway
+  main:
+    web-application-type: reactive
+  web:
+    resources:
+      add-mappings: true
+server:
+  port: 8101
+knife4j:
+  gateway:
+    enabled: true
+    strategy: discover
+    discover:
+      enabled: true
+      version: swagger2
+
