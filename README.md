@@ -8,4 +8,4 @@
 5.选用Spring Cloud Alibaba重构单体项目，使用Redis分布式Session存储用户登录信息，通过Nacos+OpenFeign实现各服务之间的相互调用；
 6.使用RabbitMQ对判题操作进行异步化解耦。
 # 附录
-自定义代码沙箱实现：
+自定义代码沙箱实现：https://github.com/WangHenga/woj-codesandbox
