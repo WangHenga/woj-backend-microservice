@@ -52,6 +52,8 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    lazy-loading-enabled: true # 开启延时加载
+    aggressive-lazy-loading: false # 禁用侵入式延时加载
   global-config:
     db-config:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名
