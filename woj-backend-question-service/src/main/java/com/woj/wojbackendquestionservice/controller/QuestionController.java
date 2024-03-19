@@ -3,7 +3,7 @@ package com.woj.wojbackendquestionservice.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 
-import com.woj.common.annotation.AuthCheck;
+import com.woj.model.annotation.AuthCheck;
 import com.woj.common.common.BaseResponse;
 import com.woj.common.common.DeleteRequest;
 import com.woj.common.common.ErrorCode;
@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @Slf4j
@@ -67,12 +66,12 @@ public class QuestionController {
      * @return
      */
     @PostMapping("/add")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Long> addQuestion(@RequestBody QuestionAddRequest questionAddRequest, HttpServletRequest request) {
-        User loginUser = userFeignClient.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userFeignClient.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (questionAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -92,7 +91,7 @@ public class QuestionController {
             question.setJudgeCase(GSON.toJson(judgeCase));
         }
         questionService.validQuestion(question, true);
-        question.setUserId(loginUser.getId());
+        question.setUserId(userFeignClient.getLoginUser(request).getId());
         question.setFavourNum(0);
         question.setThumbNum(0);
         boolean result = questionService.save(question);
@@ -109,12 +108,12 @@ public class QuestionController {
      * @return
      */
     @PostMapping("/delete")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteQuestion(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        User loginUser = userFeignClient.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userFeignClient.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -138,13 +137,13 @@ public class QuestionController {
      * @return
      */
     @PostMapping("/update")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateQuestion(@RequestBody QuestionUpdateRequest questionUpdateRequest,
                                                 HttpServletRequest request) {
-        User loginUser = userFeignClient.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userFeignClient.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (questionUpdateRequest == null || questionUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -204,12 +203,12 @@ public class QuestionController {
      * @return
      */
     @GetMapping("/get")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<QuestionAdminVO> getQuestionById(long id, HttpServletRequest request) {
-        User loginUser = userFeignClient.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userFeignClient.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -253,13 +252,13 @@ public class QuestionController {
      * @return
      */
     @PostMapping("/list/page")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<Question>> listQuestionByPage(@RequestBody QuestionQueryRequest questionQueryRequest,
                                                                   HttpServletRequest request) {
-        User loginUser = userFeignClient.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userFeignClient.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (questionQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -404,6 +403,7 @@ public class QuestionController {
      * @param request
      */
     @PostMapping("/submit/list/page")
+    @AuthCheck(mustRole = UserConstant.DEFAULT_ROLE)
     public BaseResponse<Page<QuestionSubmitVO>> listQuestionSubmitByPage(@RequestBody QuestionSubmitQueryRequest questionSubmitQueryRequest,
                                                                          HttpServletRequest request) {
         if (questionSubmitQueryRequest == null) {

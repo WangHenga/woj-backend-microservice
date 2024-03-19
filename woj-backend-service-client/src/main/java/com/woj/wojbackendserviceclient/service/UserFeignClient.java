@@ -15,12 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import static com.woj.common.constant.UserConstant.USER_LOGIN_STATE;
 
-/**
- * 用户服务
- *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
- */
 @FeignClient(name = "woj-backend-user-service",path = "/api/user/inner")
 public interface UserFeignClient {
     @GetMapping("/get")

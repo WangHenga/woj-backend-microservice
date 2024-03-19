@@ -2,7 +2,7 @@ package com.woj.wojbackenduserservice.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.woj.common.annotation.AuthCheck;
+import com.woj.model.annotation.AuthCheck;
 import com.woj.common.common.BaseResponse;
 import com.woj.common.common.DeleteRequest;
 import com.woj.common.common.ErrorCode;
@@ -119,12 +119,12 @@ public class UserController {
      * @return
      */
     @PostMapping("/add")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userService.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (userAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -143,12 +143,12 @@ public class UserController {
      * @return
      */
     @PostMapping("/delete")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userService.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -164,13 +164,13 @@ public class UserController {
      * @return
      */
     @PostMapping("/update")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
             HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userService.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -189,12 +189,12 @@ public class UserController {
      * @return
      */
     @GetMapping("/get")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<User> getUserById(long id, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userService.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -225,13 +225,13 @@ public class UserController {
      * @return
      */
     @PostMapping("/list/page")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<User>> listUserByPage(@RequestBody UserQueryRequest userQueryRequest,
             HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
-        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+//        User loginUser = userService.getLoginUser(request);
+//        if(loginUser==null||!UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//        }
         long current = userQueryRequest.getCurrent();
         long size = userQueryRequest.getPageSize();
         Page<User> userPage = userService.page(new Page<>(current, size),
