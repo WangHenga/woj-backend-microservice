@@ -3,6 +3,7 @@ package com.woj.wojbackendquestionservice.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 
+import com.woj.common.constant.RedisConstant;
 import com.woj.model.annotation.AuthCheck;
 import com.woj.common.common.BaseResponse;
 import com.woj.common.common.DeleteRequest;
@@ -25,20 +26,27 @@ import com.woj.model.vo.QuestionVO;
 import com.woj.wojbackendquestionservice.rabbitmq.MessageProducer;
 import com.woj.wojbackendquestionservice.service.QuestionService;
 import com.woj.wojbackendquestionservice.service.QuestionSubmitService;
+import com.woj.wojbackendquestionservice.task.RankTask;
 import com.woj.wojbackendserviceclient.service.JudgeFeignClient;
 import com.woj.wojbackendserviceclient.service.UserFeignClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @Slf4j
 public class QuestionController {
-
+    @Resource
+    private RedisTemplate redisTemplate;
     @Resource
     private QuestionSubmitService questionSubmitService;
 
@@ -53,6 +61,8 @@ public class QuestionController {
 
     @Resource
     private MessageProducer messageProducer;
+    @Resource
+    private RankTask rankTask;
 
     private final static Gson GSON = new Gson();
 
@@ -119,6 +129,9 @@ public class QuestionController {
         }
         User user = userFeignClient.getLoginUser(request);
         long id = deleteRequest.getId();
+        redisTemplate.delete(String.format("question_%d",id));
+        // 如果删除的是热题，将其从热题列表中移除
+        rankTask.removeFromChart(id);
         // 判断是否存在
         Question oldQuestion=questionService.getById(id);
         ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
@@ -127,6 +140,18 @@ public class QuestionController {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         boolean b = questionService.removeById(id);
+        if(b) {
+            // 延迟双删
+            CompletableFuture.runAsync(()->{
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }finally {
+                    redisTemplate.delete(String.format("question_%d",id));
+                }
+            });
+        }
         return ResultUtils.success(b);
     }
 
@@ -153,6 +178,8 @@ public class QuestionController {
 
         Question question = new Question();
         BeanUtils.copyProperties(questionUpdateRequest, question);
+        String key = String.format("question_%d", question.getId());
+        redisTemplate.delete(key);
         List<String> tags = questionUpdateRequest.getTags();
         if (tags != null) {
             question.setTags(GSON.toJson(tags));
@@ -170,6 +197,18 @@ public class QuestionController {
         Question oldQuestion = questionService.getById(id);
         ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
         boolean result = questionService.updateById(question);
+        if(result){
+            // 延迟双删
+            CompletableFuture.runAsync(()->{
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }finally {
+                    redisTemplate.delete(key);
+                }
+            });
+        }
         return ResultUtils.success(result);
     }
 
@@ -181,6 +220,12 @@ public class QuestionController {
      */
     @GetMapping("/get/vo")
     public BaseResponse<QuestionVO> getQuestionVOById(long id, HttpServletRequest request) {
+        String key=String.format("question_%d",id);
+        QuestionVO questionVO= (QuestionVO) redisTemplate.opsForValue().get(key);
+        redisTemplate.opsForZSet().incrementScore(RedisConstant.QUESTION_VIEW,id,1);
+        if(questionVO!=null){
+            return ResultUtils.success(questionVO);
+        }
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -193,7 +238,37 @@ public class QuestionController {
         if (userId != null && userId > 0) {
             user = userFeignClient.getById(userId);
         }
-        return ResultUtils.success(questionService.getQuestionVO(question, user));
+        questionVO=questionService.getQuestionVO(question, user);
+        if(rankTask.isQuestionInChart(id))
+            redisTemplate.opsForValue().set(key,questionVO,2, TimeUnit.HOURS);
+        return ResultUtils.success(questionVO);
+    }
+    /**
+     * 获取热题列表
+     */
+    @GetMapping("/get/hotlist")
+    public BaseResponse<List<QuestionVO>> getHotQuestionList(){
+        Set<Long> charts = rankTask.getCharts();
+        List<QuestionVO> hotList=new ArrayList<>();
+        for(long questionId:charts){
+            String key=String.format("question_%d", questionId);
+            QuestionVO questionVO = (QuestionVO) redisTemplate.opsForValue().get(key);
+            if(questionVO==null){
+                Question question = questionService.getById(questionId);
+                if(question==null){
+                    continue;
+                }
+                Long userId = question.getUserId();
+                User user = null;
+                if (userId != null && userId > 0) {
+                    user = userFeignClient.getById(userId);
+                }
+                questionVO=questionService.getQuestionVO(question, user);
+                redisTemplate.opsForValue().set(key,questionVO,2, TimeUnit.HOURS);
+            }
+            hotList.add(questionVO);
+        }
+        return ResultUtils.success(hotList);
     }
 
     /**
@@ -398,7 +473,7 @@ public class QuestionController {
 
     /**
      * 获取所有用户提交列表
-     *
+     * TODO 管理员可以查看所有提交，普通用户只能查看自己的提交
      * @param questionSubmitQueryRequest
      * @param request
      */

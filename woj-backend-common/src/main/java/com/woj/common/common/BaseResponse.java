@@ -15,6 +15,8 @@ public class BaseResponse<T> implements Serializable {
     private T data;
 
     private String message;
+    private static final long serialVersionUID = 1L;
+
 
     public BaseResponse(int code, T data, String message) {
         this.code = code;
