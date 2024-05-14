@@ -70,4 +70,6 @@ knife4j:
 
 codeSandbox:
   type: remote
+  app_key: first
+  app_secret: wangheng
 
